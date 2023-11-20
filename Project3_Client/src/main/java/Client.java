@@ -13,28 +13,31 @@ public class Client extends Thread {
 	ObjectInputStream in;
 
 	private Consumer<Serializable> callback;
+	private int port;
 
-	Client(Consumer<Serializable> call) {
-
+	Client(Consumer<Serializable> call, int p) {
+		port = p;
 		callback = call;
 	}
 
 	public void run() {
 
 		try {
-			socketClient = new Socket("127.0.0.1", 5555);
+			socketClient = new Socket("127.0.0.1", port);
 			out = new ObjectOutputStream(socketClient.getOutputStream());
 			in = new ObjectInputStream(socketClient.getInputStream());
 			socketClient.setTcpNoDelay(true);
 		} catch (Exception e) {
+			e.printStackTrace();
 		}
 
 		while (true) {
 
 			try {
-				String message = in.readObject().toString();
-				callback.accept(message);
+				GameMessage msg = (GameMessage) in.readObject();
+				callback.accept(msg);
 			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 
