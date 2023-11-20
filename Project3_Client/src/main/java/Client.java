@@ -3,6 +3,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.function.Consumer;
 
 public class Client extends Thread {
@@ -11,13 +13,23 @@ public class Client extends Thread {
 
 	ObjectOutputStream out;
 	ObjectInputStream in;
+	String message;
+	GameMessage gm;
 
 	private Consumer<Serializable> callback;
 	private int port;
+	String category;
 
-	Client(Consumer<Serializable> call, int p) {
+	Client(Consumer<Serializable> call, int p, String c) {
 		port = p;
 		callback = call;
+		category = c;
+		message = "";
+	}
+
+	Client(Consumer<Serializable> call, String c) {
+		callback = call;
+		category = c;
 	}
 
 	public void run() {
@@ -31,19 +43,34 @@ public class Client extends Thread {
 			e.printStackTrace();
 		}
 
-		while (true) {
+		sendCategory(category);
 
+		while (true) {
 			try {
-				GameMessage msg = (GameMessage) in.readObject();
-				if (msg.getPositions() == null && msg.getGuessCount() == -10 && msg.isInWord() == false) {
-					// we won
-					System.out.println("client won and got string right");
+				byte b = in.readByte();
+				if (b == 1) {
+					GameMessage msg = (GameMessage) in.readObject();
+					if (msg.getPositions() == null && msg.getGuessCount() == -10 && msg.isInWord() == false) {
+						// we won
+						System.out.println("client won and got string right");
+						message = "client won and got string right";
+					} else {
+						// something else happened
+						System.out.println(msg.getPositions().toString() + msg.getGuessCount() + msg.isInWord());
+						message = msg.getPositions().toString() + msg.getGuessCount() + msg.isInWord()
+								+ msg.getLetterCount();
+						gm = msg;
+					}
+					callback.accept(msg);
+				} else if (b == 2) {
+					// dont really need to do anything here
+					// @SuppressWarnings("unchecked")
+					// word = in.readObject().toString();
+					// callback.accept(currCategory);
 				} else {
-					// something else happened
-					System.out.println(msg.getPositions().toString() + msg.getGuessCount() + msg.isInWord());
 
 				}
-				callback.accept(msg);
+
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -51,12 +78,33 @@ public class Client extends Thread {
 
 	}
 
-	public void send(String data) {
-
+	/**
+	 * This sends the guess to the server
+	 * 
+	 * @param data
+	 */
+	public void sendGuess(String data) {
 		try {
+			out.writeByte(1); // Identifier for String
 			out.writeObject(data);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void sendCategory(String data) {
+		try {
+			out.writeByte(2); // Identifier for int
+			out.writeObject(data);
+			// if (category == 0) {
+			// out.writeObject("thanksgiving");
+			// } else if (category == 1) {
+			// out.writeObject("food");
+			// } else {
+			// out.writeObject("US states");
+			// }
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}

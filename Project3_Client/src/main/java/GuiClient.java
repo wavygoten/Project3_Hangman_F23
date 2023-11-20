@@ -23,15 +23,18 @@ public class GuiClient extends Application {
 
 	/* Private data members we need */
 
-	private int remainingWordGuesses, category, wordNumber, letterCount, port, remainingLetterGuesses;
+	private int remainingWordGuesses, wordNumber, letterCount, port, remainingLetterGuesses;
 	private boolean isLetterInWord, gameResult;
-	private char guessLetter;
+	private String category, guessWord, sampleText;
 	/* Java FX Components */
-	private MenuItem exit, re, htp;
-	TextField portText, guessWord, guessChar;
-	Label gnLabel, glLabel, cLabel, wnLabel, lcLabel;
+	MenuItem exit, re, htp;
+	MenuBar mb;
+	Menu options;
+	TextField portText, guessText;
+	Label gnLabel, glLabel, cLabel, wnLabel, lcLabel, shortPlay;
 	TextArea message;
-	Button loginBtn;
+	ListView<String> messageArea;
+	Button loginBtn, guessBtn, categoryBtn;
 	ChoiceBox<String> categoryBox;
 	Scene startScene;
 	Client clientConnection;
@@ -42,24 +45,42 @@ public class GuiClient extends Application {
 		gameResult = false;
 		remainingLetterGuesses = 6;
 		remainingWordGuesses = 3;
-
+		sampleText = "";
 		// Init Javafx Components
 
 		/* Login Scene */
 		loginBtn = new Button("Login");
 		categoryBox = new ChoiceBox<>();
-		categoryBox.getItems().addAll("Category 1", "Category 2", "Category 3");
+		categoryBox.getItems().addAll("Thanksgiving", "Food", "US States");
 		portText = new TextField();
 		portText.setPromptText("Enter port number");
 		/* End of Login Scene */
 
 		/* Game Scene */
+		shortPlay = new Label(
+				"Please guess a letter or word in the box and submit to see if it exists or is correct. The game will end if you run out of guesses or guess the correct word.");
 
 		exit = new MenuItem("Exit");
 		re = new MenuItem("Fresh Start");
 		htp = new MenuItem("How to Play");
+		mb = new MenuBar();
+		options = new Menu("Options");
+		mb.getMenus().add(options);
+		options.getItems().addAll(exit, re, htp);
+
+		guessText = new TextField();
+		guessText.setPromptText("Guess word or letter here");
+		guessBtn = new Button("Guess");
+
 		message = new TextArea();
+		messageArea = new ListView<>();
+
 		/* End of Game Scene */
+
+		/* Category Scene */
+		categoryBtn = new Button("Choose New Category");
+
+		/* End of Category Scene */
 
 		/* Add css classes */
 
@@ -118,34 +139,83 @@ public class GuiClient extends Application {
 		loginBtn.setOnAction(event -> {
 			try {
 				port = Integer.valueOf(portText.getText());
-				category = categoryBox.getSelectionModel().getSelectedIndex();
+				category = categoryBox.getSelectionModel().getSelectedItem();
 				System.out.println("Port: " + port + "\nCategory: " + category);
-				Scene gameScene = createGameScene();
+				Scene gameScene = gameScene();
 				gameScene.getStylesheets().add("style.css");
 				primaryStage.setScene(gameScene);
 				primaryStage.setTitle("Hangman Game Client");
 				clientConnection = new Client(data -> {
 					Platform.runLater(() -> {
-						// do javafx stuff here?
-						// listItems2.getItems().add(data.toString());
+						message.appendText(clientConnection.message);
+						if (clientConnection.message.equals("client won and got string right")
+								|| clientConnection.gm.getGuessCount() == -1) {
+							// go to category scene
+							sampleText = "";
+							message.clear();
+							messageArea.getItems().clear();
+							Scene catScene = categoryScene();
+							catScene.getStylesheets().add("style.css");
+							primaryStage.setScene(catScene);
+							primaryStage.setTitle("Hangman Category Scene - Client");
+						} else {
+							if (sampleText.length() == 0) {
+								for (int i = 0; i < clientConnection.gm.getLetterCount(); i++) {
+									sampleText += "_";
+								}
+							}
+							for (int i = 0; i < clientConnection.gm.getLetterCount(); i++) {
+								if (clientConnection.gm.getPositions().contains(i)) {
+									sampleText = sampleText.substring(0, i) + guessWord.charAt(0)
+											+ sampleText.substring(i + 1);
+								}
+							}
+							messageArea.getItems().add("Letter " + guessWord + " exists in the word at positions "
+									+ clientConnection.gm.getPositions() + " -> " + sampleText);
+
+						}
+
 					});
-				}, port);
+				}, port, category);
 				clientConnection.start();
 			} catch (Exception e) {
 				// TODO: handle exception
 				e.printStackTrace();
 				exitButton(event);
 			}
+		});
 
+		guessBtn.setOnAction(event -> {
+			try {
+				System.out.println(guessText.getText());
+				guessWord = guessText.getText();
+				clientConnection.sendGuess(guessText.getText()); // testing clint if it works.
+			} catch (Exception e) {
+				// TODO: handle exception
+				e.printStackTrace();
+			}
+		});
+
+		categoryBtn.setOnAction(event -> {
+			try {
+				category = categoryBox.getSelectionModel().getSelectedItem();
+				Scene gameScene = gameScene();
+				gameScene.getStylesheets().add("style.css");
+				primaryStage.setScene(gameScene);
+				primaryStage.setTitle("Hangman Game Client");
+				clientConnection.category = category;
+				clientConnection.sendCategory(category);
+			} catch (Exception e) {
+				// TODO: handle exception
+				e.printStackTrace();
+			}
 		});
 	}
 
-	public Scene createGameScene() {
-		MenuBar mb = new MenuBar();
-		Menu options = new Menu("Options");
-		mb.getMenus().add(options);
-		options.getItems().addAll(exit, re, htp);
-		VBox root = new VBox(50, mb);
+	public Scene gameScene() {
+
+		HBox gameControls = new HBox(20, guessText, guessBtn);
+		VBox root = new VBox(50, mb, shortPlay, gameControls, messageArea);
 		return new Scene(root, 700, 700);
 	}
 
@@ -155,58 +225,15 @@ public class GuiClient extends Application {
 		return new Scene(root, 500, 200);
 	}
 
-	// public Scene createServerGui() {
-
-	// BorderPane pane = new BorderPane();
-	// pane.setPadding(new Insets(70));
-	// pane.setStyle("-fx-background-color: coral");
-	// //
-	// pane.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
-	// pane.setCenter(listItems);
-	// Scene retS = new Scene(pane, 500, 400);
-	// retS.getStylesheets().add("style.css");
-	// return retS;
-	// }
-
-	// public Scene createClientGui() {
-
-	// clientBox = new VBox(10, c1, b1, listItems2);
-	// clientBox.setStyle("-fx-background-color: blue");
-	// Scene retS = new Scene(clientBox, 500, 400);
-	// retS.getStylesheets().add("style.css");
-	// return retS;
-
-	// }
+	public Scene categoryScene() {
+		// clientConnection.
+		categoryBox.getItems().remove(category);
+		VBox root = new VBox(20, categoryBox, categoryBtn);
+		return new Scene(root, 400, 200);
+	}
 
 	private void restartButton(ActionEvent event) {
-		// currentBalance = 100;
-		// totalWinnings = 0;
-		// bankerHand.clear();
-		// playerHand.clear();
-		// theDealer.shuffleDeck();
-		// roundNumber = 1;
-		// intWinnings.setText("$" + String.valueOf(totalWinnings));
-		// intBalance.setText("$" + String.valueOf(currentBalance));
-		// rN.setText(String.valueOf(roundNumber));
-		// message.setText("");
-		// intBankerTotal.setText("0");
-		// intPlayerTotal.setText("0");
-		// bankerBetAmount.setPromptText("$0");
-		// bankerBetAmount.setText("");
-		// bankerBetAmount.setDisable(true);
-		// tieBetAmount.setPromptText("$0");
-		// tieBetAmount.setText("");
-		// tieBetAmount.setDisable(true);
-		// playerBetAmount.setPromptText("$0");
-		// playerBetAmount.setText("");
-		// playerBetAmount.setDisable(true);
-		// playerCardOneView.setImage(null);
-		// playerCardTwoView.setImage(null);
-		// playerCardThreeView.setImage(null);
-		// bankerCardOneView.setImage(null);
-		// bankerCardTwoView.setImage(null);
-		// bankerCardThreeView.setImage(null);
-		// playButton.setDisable(true);
+		message.clear();
 	}
 
 	private void exitButton(ActionEvent event) {
@@ -217,7 +244,29 @@ public class GuiClient extends Application {
 	private void htpButton(ActionEvent event) {
 		String howString = "To play this game\n1. blahblahblah";
 		message.setText(howString);
-		clientConnection.send("banana"); // testing clint if it works.
 	}
 
 }
+
+// public Scene createServerGui() {
+
+// BorderPane pane = new BorderPane();
+// pane.setPadding(new Insets(70));
+// pane.setStyle("-fx-background-color: coral");
+// //
+// pane.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+// pane.setCenter(listItems);
+// Scene retS = new Scene(pane, 500, 400);
+// retS.getStylesheets().add("style.css");
+// return retS;
+// }
+
+// public Scene createClientGui() {
+
+// clientBox = new VBox(10, c1, b1, listItems2);
+// clientBox.setStyle("-fx-background-color: blue");
+// Scene retS = new Scene(clientBox, 500, 400);
+// retS.getStylesheets().add("style.css");
+// return retS;
+
+// }
