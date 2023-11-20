@@ -19,18 +19,12 @@ public class Server {
 	ArrayList<ClientThread> clients = new ArrayList<ClientThread>();
 	TheServer server;
 	private Consumer<Serializable> callback;
-	String word;
-	boolean won, letterInWord;
-	int guessCount;
 
 	Server(Consumer<Serializable> call) {
 
 		callback = call;
 		server = new TheServer();
 		server.start();
-		word = "banana";
-		won = letterInWord = false;
-		guessCount = 6;
 	}
 
 	public class TheServer extends Thread {
@@ -60,26 +54,22 @@ public class Server {
 	class ClientThread extends Thread {
 
 		Socket connection;
-		int count;
+		int count, letterCount, rand;
 		ObjectInputStream in;
 		ObjectOutputStream out;
+		String word, currCategory;
+		boolean won, letterInWord;
+		int guessCount;
+		Categories categories;
 
 		ClientThread(Socket s, int count) {
 			this.connection = s;
 			this.count = count;
+			word = "";
+			won = letterInWord = false;
+			guessCount = 6;
+			categories = new Categories();
 		}
-
-		// public void updateClients(String message) {
-		// for (int i = 0; i < clients.size(); i++) {
-		// ClientThread t = clients.get(i);
-		// try {
-		// t.out.writeObject(message);
-		// // this where it sends back?
-		// } catch (Exception e) {
-		// e.printStackTrace();
-		// }
-		// }
-		// }
 
 		public void run() {
 
@@ -91,36 +81,52 @@ public class Server {
 				System.out.println("Streams not open");
 			}
 
-			// updateClients("new client on server: client #" + count);
-
 			while (true) {
-				try {
-					letterInWord = false;
-					String guess = in.readObject().toString();
-					ArrayList<Integer> positions = new ArrayList<>();
-					callback.accept("client: " + count + " sent: " + guess);
 
-					if (guess.length() == 1) {
-						for (int i = 0; i < word.length(); i++) {
-							if (word.toLowerCase().charAt(i) == guess.toLowerCase().charAt(0)) {
-								letterInWord = true;
-								positions.add(i);
+				try {
+					byte b = in.readByte();
+					if (b == 1) {
+						won = false;
+						out.writeByte(1);
+						letterInWord = false;
+						String guess = in.readObject().toString();
+						ArrayList<Integer> positions = new ArrayList<>();
+						callback.accept("client: " + count + " sent: " + guess);
+
+						if (guess.length() == 1) {
+							for (int i = 0; i < word.length(); i++) {
+								if (word.toLowerCase().charAt(i) == guess.toLowerCase().charAt(0)) {
+									letterInWord = true;
+									positions.add(i);
+								}
+							}
+						} else {
+							if (guess.toLowerCase().equals(word.toLowerCase())) {
+								won = true;
 							}
 						}
-					} else {
-						if (guess.toLowerCase().equals(word.toLowerCase())) {
-							won = true;
-						}
-					}
-					if (!won) {
-						GameMessage msgSend = new GameMessage(positions, guessCount--, letterInWord);
-						out.writeObject(msgSend);
+						if (!won) {
+							GameMessage msgSend = new GameMessage(positions, guessCount--, letterInWord, letterCount);
+							out.writeObject(msgSend);
+						} else {
+							// player won game
+							GameMessage msgSend = new GameMessage(null, -10, false, letterCount); // -10 means we win
+							out.writeObject(msgSend);
+							categories.getCategories().remove(currCategory); // have to remove word and
+																				// get a new word from
+																				// diff category
 
+						}
+					} else if (b == 2) {
+						currCategory = in.readObject().toString().toLowerCase();
+						rand = (int) Math.random() * 3;
+						word = categories.getCategories().get(currCategory).get(rand);
+						letterCount = word.length();
+						System.out.println(word);
 					} else {
-						// player won game
-						GameMessage msgSend = new GameMessage(null, -10, false); // -10 means we win
-						out.writeObject(msgSend);
+
 					}
+
 				} catch (Exception e) {
 					callback.accept(
 							"OOOOPPs...Something wrong with the socket from client: " + count + "....closing down!");
