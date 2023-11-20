@@ -1,25 +1,27 @@
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class GameMessage implements Serializable {
-    private String message;
-    private char letter;
-    private boolean isCorrect;
+    private static final long serialVersionUID = 1L;
+    private ArrayList<Integer> positions;
+    private boolean isLetterInWord;
+    private int guessCount;
 
-    public GameMessage(String message, char letter, boolean isCorrect) {
-        this.message = message;
-        this.letter = letter;
-        this.isCorrect = isCorrect;
+    public GameMessage(ArrayList<Integer> p, int gc, boolean inWord) {
+        positions = p;
+        guessCount = gc;
+        isLetterInWord = inWord;
     }
 
-    public String getMessage() {
-        return message;
+    public ArrayList<Integer> getPositions() {
+        return positions;
     }
 
-    public char getLetter() {
-        return letter;
+    public int getGuessCount() {
+        return guessCount;
     }
 
-    public boolean isCorrect() {
-        return isCorrect;
+    public boolean isInWord() {
+        return isLetterInWord;
     }
 }

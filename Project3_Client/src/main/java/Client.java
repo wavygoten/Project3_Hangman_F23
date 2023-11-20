@@ -35,6 +35,14 @@ public class Client extends Thread {
 
 			try {
 				GameMessage msg = (GameMessage) in.readObject();
+				if (msg.getPositions() == null && msg.getGuessCount() == -10 && msg.isInWord() == false) {
+					// we won
+					System.out.println("client won and got string right");
+				} else {
+					// something else happened
+					System.out.println(msg.getPositions().toString() + msg.getGuessCount() + msg.isInWord());
+
+				}
 				callback.accept(msg);
 			} catch (Exception e) {
 				e.printStackTrace();

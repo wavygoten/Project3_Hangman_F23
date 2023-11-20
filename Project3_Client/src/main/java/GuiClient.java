@@ -217,7 +217,7 @@ public class GuiClient extends Application {
 	private void htpButton(ActionEvent event) {
 		String howString = "To play this game\n1. blahblahblah";
 		message.setText(howString);
-		clientConnection.send("Test"); // testing clint if it works.
+		clientConnection.send("banana"); // testing clint if it works.
 	}
 
 }
