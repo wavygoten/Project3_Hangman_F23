@@ -111,8 +111,6 @@ public class GuiServer extends Application {
 		BorderPane pane = new BorderPane();
 		pane.setPadding(new Insets(70));
 		pane.setStyle("-fx-background-color: coral");
-
-		pane.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
 		pane.setCenter(listItems);
 		Scene retS = new Scene(pane, 500, 400);
 		retS.getStylesheets().add("style.css");

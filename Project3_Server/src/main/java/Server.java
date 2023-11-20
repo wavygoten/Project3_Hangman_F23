@@ -13,106 +13,122 @@ import javafx.scene.control.ListView;
  * C: kind of following
  */
 
-public class Server{
+public class Server {
 
-	int count = 1;	
+	int count = 1;
 	ArrayList<ClientThread> clients = new ArrayList<ClientThread>();
 	TheServer server;
 	private Consumer<Serializable> callback;
-	
-	
-	Server(Consumer<Serializable> call){
-	
+	String word;
+	boolean won, letterInWord;
+	int guessCount;
+
+	Server(Consumer<Serializable> call) {
+
 		callback = call;
 		server = new TheServer();
 		server.start();
+		word = "banana";
+		won = letterInWord = false;
+		guessCount = 6;
 	}
-	
-	
-	public class TheServer extends Thread{
-		
+
+	public class TheServer extends Thread {
+
 		public void run() {
-		
-			try(ServerSocket mysocket = new ServerSocket(5555);){
-		    System.out.println("Server is waiting for a client!");
-		  
-			
-		    while(true) {
-		
-				ClientThread c = new ClientThread(mysocket.accept(), count);
-				callback.accept("client has connected to server: " + "client #" + count);
-				clients.add(c);
-				c.start();
-				
-				count++;
-				
-			    }
-			}//end of try
-				catch(Exception e) {
-					callback.accept("Server socket did not launch");
+
+			try (ServerSocket mysocket = new ServerSocket(5555);) {
+				System.out.println("Server is waiting for a client!");
+
+				while (true) {
+
+					ClientThread c = new ClientThread(mysocket.accept(), count);
+					callback.accept("client has connected to server: " + "client #" + count);
+					clients.add(c);
+					c.start();
+
+					count++;
+
 				}
-			}//end of while
+			} // end of try
+			catch (Exception e) {
+				callback.accept("Server socket did not launch");
+			}
+		}// end of while
+	}
+
+	class ClientThread extends Thread {
+
+		Socket connection;
+		int count;
+		ObjectInputStream in;
+		ObjectOutputStream out;
+
+		ClientThread(Socket s, int count) {
+			this.connection = s;
+			this.count = count;
 		}
-	
 
-		class ClientThread extends Thread{
-			
-		
-			Socket connection;
-			int count;
-			ObjectInputStream in;
-			ObjectOutputStream out;
-			
-			ClientThread(Socket s, int count){
-				this.connection = s;
-				this.count = count;	
+		// public void updateClients(String message) {
+		// for (int i = 0; i < clients.size(); i++) {
+		// ClientThread t = clients.get(i);
+		// try {
+		// t.out.writeObject(message);
+		// // this where it sends back?
+		// } catch (Exception e) {
+		// e.printStackTrace();
+		// }
+		// }
+		// }
+
+		public void run() {
+
+			try {
+				in = new ObjectInputStream(connection.getInputStream());
+				out = new ObjectOutputStream(connection.getOutputStream());
+				connection.setTcpNoDelay(true);
+			} catch (Exception e) {
+				System.out.println("Streams not open");
 			}
-			
-			public void updateClients(String message) {
-				for(int i = 0; i < clients.size(); i++) {
-					ClientThread t = clients.get(i);
-					try {
-					 t.out.writeObject(message);
-					}
-					catch(Exception e) {}
-				}
-			}
-			
-			public void run(){
-					
+
+			// updateClients("new client on server: client #" + count);
+
+			while (true) {
 				try {
-					in = new ObjectInputStream(connection.getInputStream());
-					out = new ObjectOutputStream(connection.getOutputStream());
-					connection.setTcpNoDelay(true);	
-				}
-				catch(Exception e) {
-					System.out.println("Streams not open");
-				}
-				
-				updateClients("new client on server: client #"+count);
-					
-				 while(true) {
-					    try {
-					    	String data = in.readObject().toString();
-					    	callback.accept("client: " + count + " sent: " + data);
-					    	updateClients("client #"+count+" said: "+data);
-					    	
-					    	}
-					    catch(Exception e) {
-					    	callback.accept("OOOOPPs...Something wrong with the socket from client: " + count + "....closing down!");
-					    	updateClients("Client #"+count+" has left the server!");
-					    	clients.remove(this);
-					    	break;
-					    }
+					letterInWord = false;
+					String guess = in.readObject().toString();
+					ArrayList<Integer> positions = new ArrayList<>();
+					callback.accept("client: " + count + " sent: " + guess);
+
+					if (guess.length() == 1) {
+						for (int i = 0; i < word.length(); i++) {
+							if (word.toLowerCase().charAt(i) == guess.toLowerCase().charAt(0)) {
+								letterInWord = true;
+								positions.add(i);
+							}
+						}
+					} else {
+						if (guess.toLowerCase().equals(word.toLowerCase())) {
+							won = true;
+						}
 					}
-				}//end of run
-			
-			
-		}//end of client thread
+					if (!won) {
+						GameMessage msgSend = new GameMessage(positions, guessCount--, letterInWord);
+						out.writeObject(msgSend);
+
+					} else {
+						// player won game
+						GameMessage msgSend = new GameMessage(null, -10, false); // -10 means we win
+						out.writeObject(msgSend);
+					}
+				} catch (Exception e) {
+					callback.accept(
+							"OOOOPPs...Something wrong with the socket from client: " + count + "....closing down!");
+					clients.remove(this);
+					break;
+				}
+			}
+		}// end of run
+
+	}// end of client thread
 }
-
-
-	
-	
-
-	
