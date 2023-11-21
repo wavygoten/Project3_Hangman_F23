@@ -50,29 +50,30 @@ public class Client extends Thread {
 				byte b = in.readByte();
 				if (b == 1) {
 					GameMessage msg = (GameMessage) in.readObject();
+					gm = msg;
 					if (msg.getPositions() == null && msg.getGuessCount() == -10 && msg.isInWord() == false) {
 						// we won
 						System.out.println("client won and got string right");
 						message = "client won and got string right";
 					} else {
 						// something else happened
-						System.out.println(msg.getPositions().toString() + msg.getGuessCount() + msg.isInWord());
+						System.out.println(msg.getPositions().toString() + msg.getGuessCount() + msg.isInWord()
+								+ msg.getGuessCount() + msg.getWordGuessCount());
 						message = msg.getPositions().toString() + msg.getGuessCount() + msg.isInWord()
-								+ msg.getLetterCount();
-						gm = msg;
+								+ msg.getLetterCount() + msg.getGuessCount() + msg.getWordGuessCount();
 					}
 					callback.accept(msg);
 				} else if (b == 2) {
-					// dont really need to do anything here
-					// @SuppressWarnings("unchecked")
-					// word = in.readObject().toString();
-					// callback.accept(currCategory);
+					// we ran out of words
+					message = in.readObject().toString();
+					callback.accept(message);
 				} else {
 
 				}
 
 			} catch (Exception e) {
 				e.printStackTrace();
+				System.exit(0);
 			}
 		}
 

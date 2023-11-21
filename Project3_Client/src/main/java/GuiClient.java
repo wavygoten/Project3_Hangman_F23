@@ -22,9 +22,7 @@ import javafx.stage.WindowEvent;
 public class GuiClient extends Application {
 
 	/* Private data members we need */
-
-	private int remainingWordGuesses, wordNumber, letterCount, port, remainingLetterGuesses;
-	private boolean isLetterInWord, gameResult;
+	private int port;
 	private String category, guessWord, sampleText;
 	/* Java FX Components */
 	MenuItem exit, re, htp;
@@ -32,7 +30,7 @@ public class GuiClient extends Application {
 	Menu options;
 	TextField portText, guessText;
 	Label gnLabel, glLabel, cLabel, wnLabel, lcLabel, shortPlay;
-	TextArea message;
+	// TextArea message;
 	ListView<String> messageArea;
 	Button loginBtn, guessBtn, categoryBtn;
 	ChoiceBox<String> categoryBox;
@@ -42,9 +40,6 @@ public class GuiClient extends Application {
 	/* Default constructor */
 	public GuiClient() {
 		// Init data members
-		gameResult = false;
-		remainingLetterGuesses = 6;
-		remainingWordGuesses = 3;
 		sampleText = "";
 		// Init Javafx Components
 
@@ -72,7 +67,7 @@ public class GuiClient extends Application {
 		guessText.setPromptText("Guess word or letter here");
 		guessBtn = new Button("Guess");
 
-		message = new TextArea();
+		// message = new TextArea();
 		messageArea = new ListView<>();
 
 		/* End of Game Scene */
@@ -132,7 +127,7 @@ public class GuiClient extends Application {
 		primaryStage.setScene(startScene);
 		primaryStage.show();
 
-		re.setOnAction(e -> restartButton(e));
+		re.setOnAction(e -> restartButton(e, primaryStage));
 		exit.setOnAction(e -> exitButton(e));
 		htp.setOnAction(e -> htpButton(e));
 
@@ -147,14 +142,27 @@ public class GuiClient extends Application {
 				primaryStage.setTitle("Hangman Game Client");
 				clientConnection = new Client(data -> {
 					Platform.runLater(() -> {
-						message.appendText(clientConnection.message);
+						// message.appendText(clientConnection.message);
 						if (clientConnection.message.equals("client won and got string right")
-								|| clientConnection.gm.getGuessCount() == -1) {
+								|| clientConnection.message.equals("ran out of category")) {
 							// go to category scene
 							sampleText = "";
-							message.clear();
+
+							// message.clear();
 							messageArea.getItems().clear();
 							Scene catScene = categoryScene();
+							catScene.getStylesheets().add("style.css");
+							primaryStage.setScene(catScene);
+							primaryStage.setTitle("Hangman Category Scene - Client");
+						} else if (clientConnection.gm.getWordGuessCount() == 0
+								|| clientConnection.gm.getGuessCount() == 0) {
+							// reset the counts
+
+							// dont pop the
+							sampleText = "";
+							// message.clear();
+							messageArea.getItems().clear();
+							Scene catScene = categorySceneNoPop();
 							catScene.getStylesheets().add("style.css");
 							primaryStage.setScene(catScene);
 							primaryStage.setTitle("Hangman Category Scene - Client");
@@ -199,11 +207,12 @@ public class GuiClient extends Application {
 		categoryBtn.setOnAction(event -> {
 			try {
 				category = categoryBox.getSelectionModel().getSelectedItem();
+				// System.out.println(category);
 				Scene gameScene = gameScene();
 				gameScene.getStylesheets().add("style.css");
 				primaryStage.setScene(gameScene);
 				primaryStage.setTitle("Hangman Game Client");
-				clientConnection.category = category;
+				// clientConnection.category = category;
 				clientConnection.sendCategory(category);
 			} catch (Exception e) {
 				// TODO: handle exception
@@ -228,12 +237,26 @@ public class GuiClient extends Application {
 	public Scene categoryScene() {
 		// clientConnection.
 		categoryBox.getItems().remove(category);
-		VBox root = new VBox(20, categoryBox, categoryBtn);
+		VBox root = new VBox(20, mb, categoryBox, categoryBtn);
 		return new Scene(root, 400, 200);
 	}
 
-	private void restartButton(ActionEvent event) {
-		message.clear();
+	public Scene categorySceneNoPop() {
+		VBox root = new VBox(20, mb, categoryBox, categoryBtn);
+		return new Scene(root, 400, 200);
+	}
+
+	private void restartButton(ActionEvent event, Stage stage) {
+		messageArea.getItems().clear();
+		categoryBox.getItems().clear();
+		categoryBox.getItems().addAll("Thanksgiving", "Food", "US States");
+		try {
+			start(stage);
+
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
 	}
 
 	private void exitButton(ActionEvent event) {
@@ -242,8 +265,8 @@ public class GuiClient extends Application {
 	}
 
 	private void htpButton(ActionEvent event) {
-		String howString = "To play this game\n1. blahblahblah";
-		message.setText(howString);
+		String howString = "To play this game\n Guess a letter or word in the input box (You have 6 letter guesses and 3 word guesses)";
+		messageArea.getItems().add(howString);
 	}
 
 }
