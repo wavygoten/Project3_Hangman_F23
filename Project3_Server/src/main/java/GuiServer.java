@@ -7,6 +7,7 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
@@ -17,9 +18,9 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
 public class GuiServer extends Application {
-
-	TextField s1, s2, s3, s4, c1;
-	Button serverChoice, clientChoice, b1;
+	private int port;
+	TextField s1, s2, s3, s4, c1, portText;
+	Button serverChoice, clientChoice, b1, loginBtn;
 	HashMap<String, Scene> sceneMap;
 	GridPane grid;
 	HBox buttonBox;
@@ -29,6 +30,14 @@ public class GuiServer extends Application {
 	Server serverConnection;
 	ListView<String> listItems, listItems2;
 
+	public GuiServer() {
+		portText = new TextField();
+		portText.setPromptText("Enter port number");
+		loginBtn = new Button("Login");
+		listItems = new ListView<String>();
+
+	}
+
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		launch(args);
@@ -37,61 +46,28 @@ public class GuiServer extends Application {
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		// TODO Auto-generated method stub
-		primaryStage.setTitle("The Networked Client/Server GUI Example");
+		primaryStage.setTitle("Server Login Scene");
 
-		this.serverChoice = new Button("Server");
-		this.serverChoice.setStyle("-fx-pref-width: 300px");
-		this.serverChoice.setStyle("-fx-pref-height: 300px");
-
-		this.serverChoice.setOnAction(e -> {
-			primaryStage.setScene(createServerGui());
-			primaryStage.setTitle("This is the Server");
-			serverConnection = new Server(data -> {
-				Platform.runLater(() -> {
-					listItems.getItems().add(data.toString());
-				});
-
-			});
-
+		loginBtn.setOnAction(event -> {
+			try {
+				port = Integer.valueOf(portText.getText());
+				primaryStage.setScene(createServerGui());
+				primaryStage.setTitle("This is the Server");
+				serverConnection = new Server(data -> {
+					Platform.runLater(() -> {
+						listItems.getItems().add(data.toString());
+					});
+				}, port);
+			} catch (Exception e) {
+				e.printStackTrace();
+				Platform.exit();
+				System.exit(0);
+				// TODO: handle exception
+			}
 		});
 
-		// this.clientChoice = new Button("Client");
-		// this.clientChoice.setStyle("-fx-pref-width: 300px");
-		// this.clientChoice.setStyle("-fx-pref-height: 300px");
-
-		// this.clientChoice.setOnAction(e->
-		// {primaryStage.setScene(sceneMap.get("client"));
-		// primaryStage.setTitle("This is a client");
-		// clientConnection = new Client(data->{
-		// Platform.runLater(()->{listItems2.getItems().add(data.toString());
-		// });
-		// });
-
-		// clientConnection.start();
-		// });
-
-		this.buttonBox = new HBox(400, serverChoice);
-		startPane = new BorderPane();
-		startPane.setPadding(new Insets(70));
-		startPane.setCenter(buttonBox);
-
-		startScene = new Scene(startPane, 800, 800);
+		startScene = loginScene();
 		startScene.getStylesheets().add("style.css");
-
-		listItems = new ListView<String>();
-		listItems2 = new ListView<String>();
-
-		c1 = new TextField();
-		// b1 = new Button("Send");
-		// b1.setOnAction(e -> {
-		// clientConnection.send(c1.getText());
-		// c1.clear();
-		// });
-
-		// sceneMap = new HashMap<String, Scene>();
-
-		// sceneMap.put("server", createServerGui());
-		// sceneMap.put("client", createClientGui());
 
 		primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
 			@Override
@@ -115,6 +91,12 @@ public class GuiServer extends Application {
 		Scene retS = new Scene(pane, 500, 400);
 		retS.getStylesheets().add("style.css");
 		return retS;
+	}
+
+	public Scene loginScene() {
+		Label whatToDo = new Label("Please enter port number, then press login.");
+		VBox root = new VBox(20, portText, loginBtn, whatToDo);
+		return new Scene(root, 500, 200);
 	}
 
 	// public Scene createClientGui() {

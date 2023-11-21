@@ -19,19 +19,21 @@ public class Server {
 	ArrayList<ClientThread> clients = new ArrayList<ClientThread>();
 	TheServer server;
 	private Consumer<Serializable> callback;
+	private int port;
 
-	Server(Consumer<Serializable> call) {
+	Server(Consumer<Serializable> call, int p) {
 
 		callback = call;
 		server = new TheServer();
 		server.start();
+		port = p;
 	}
 
 	public class TheServer extends Thread {
 
 		public void run() {
 
-			try (ServerSocket mysocket = new ServerSocket(5555);) {
+			try (ServerSocket mysocket = new ServerSocket(port);) {
 				System.out.println("Server is waiting for a client!");
 
 				while (true) {
@@ -59,7 +61,7 @@ public class Server {
 		ObjectOutputStream out;
 		String word, currCategory;
 		boolean won, letterInWord;
-		int guessCount;
+		int guessCount, wordGuessCount, wordCounter;
 		Categories categories;
 
 		ClientThread(Socket s, int count) {
@@ -68,6 +70,7 @@ public class Server {
 			word = "";
 			won = letterInWord = false;
 			guessCount = 6;
+			wordGuessCount = 3;
 			categories = new Categories();
 		}
 
@@ -100,17 +103,23 @@ public class Server {
 									positions.add(i);
 								}
 							}
+							guessCount--;
 						} else {
 							if (guess.toLowerCase().equals(word.toLowerCase())) {
 								won = true;
 							}
+							wordGuessCount--;
 						}
 						if (!won) {
-							GameMessage msgSend = new GameMessage(positions, guessCount--, letterInWord, letterCount);
+							GameMessage msgSend = new GameMessage(positions, guessCount, letterInWord, letterCount,
+									wordGuessCount);
 							out.writeObject(msgSend);
 						} else {
 							// player won game
-							GameMessage msgSend = new GameMessage(null, -10, false, letterCount); // -10 means we win
+							GameMessage msgSend = new GameMessage(null, -10, false, letterCount, wordGuessCount); // -10
+																													// means
+																													// we
+																													// win
 							out.writeObject(msgSend);
 							categories.getCategories().remove(currCategory); // have to remove word and
 																				// get a new word from
@@ -119,15 +128,20 @@ public class Server {
 						}
 					} else if (b == 2) {
 						currCategory = in.readObject().toString().toLowerCase();
-						rand = (int) Math.random() * 3;
-						word = categories.getCategories().get(currCategory).get(rand);
+						rand = (int) Math.random() * categories.getCategories().get(currCategory).size();
+						word = categories.getCategories().get(currCategory).remove(rand);
+						// categories.getCategories().get(currCategory).remove(rand);
 						letterCount = word.length();
+						guessCount = 6;
+						wordGuessCount = 3;
 						System.out.println(word);
+
 					} else {
 
 					}
 
 				} catch (Exception e) {
+					e.printStackTrace();
 					callback.accept(
 							"OOOOPPs...Something wrong with the socket from client: " + count + "....closing down!");
 					clients.remove(this);
