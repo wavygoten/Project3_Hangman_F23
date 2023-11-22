@@ -1,7 +1,7 @@
 .root {
 	-fx-font-size: 11pt;
 	-fx-font-family: "Arial";
-	-fx-background-color: #333333;
+	/* -fx-background-color: #333333; */
 }
 
 .button {
@@ -12,14 +12,16 @@
 
 .button:hover {
 	-fx-opacity: 1;
-	-fx-cursor: pointer;
 }
 
-.textfield {
+/* .textfield {
 	-fx-background-color: #d4d4d4;
 	-fx-text-fill: black;
-}
+} */
 
-.label {
+/* .label {
 	-fx-text-fill: white;
-}
+} */
+/* .choicebox label {
+	-fx-text-fill: black;
+} */

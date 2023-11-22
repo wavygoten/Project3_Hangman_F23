@@ -53,7 +53,7 @@ public class GuiClient extends Application {
 
 		/* Game Scene */
 		shortPlay = new Label(
-				"Please guess a letter or word in the box and submit to see if it exists or is correct. The game will end if you run out of guesses or guess the correct word.");
+				"Please guess a letter or word in the box and submit to see if it exists or is correct.");
 
 		exit = new MenuItem("Exit");
 		re = new MenuItem("Fresh Start");
@@ -79,7 +79,7 @@ public class GuiClient extends Application {
 
 		/* Add css classes */
 		// loginBtn.getStyleClass().add("loginbtn");
-		
+
 		/* End of css classes */
 	}
 
