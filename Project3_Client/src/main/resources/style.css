@@ -2,17 +2,14 @@
 	-fx-font-size: 11pt;
 	-fx-font-family: "Arial";
 	-fx-background-color: #333333;
-	-fx-text-fill: white;
 }
-
-/* .loginbtn {
-	-fx-background-color: blue;
-} */
 
 .button {
 	-fx-opacity: 0.8;
 	-fx-background-color: rgb(88, 147, 196);
+	-fx-text-fill: white;
 }
+
 .button:hover {
 	-fx-opacity: 1;
 	-fx-cursor: pointer;
@@ -21,4 +18,8 @@
 .textfield {
 	-fx-background-color: #d4d4d4;
 	-fx-text-fill: black;
+}
+
+.label {
+	-fx-text-fill: white;
 }
