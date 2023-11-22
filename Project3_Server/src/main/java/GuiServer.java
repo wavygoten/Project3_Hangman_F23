@@ -99,12 +99,4 @@ public class GuiServer extends Application {
 		return new Scene(root, 500, 200);
 	}
 
-	// public Scene createClientGui() {
-
-	// clientBox = new VBox(10, c1,b1,listItems2);
-	// clientBox.setStyle("-fx-background-color: blue");
-	// return new Scene(clientBox, 400, 300);
-
-	// }
-
 }

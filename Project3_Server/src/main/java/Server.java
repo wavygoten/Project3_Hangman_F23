@@ -85,7 +85,6 @@ public class Server {
 			}
 
 			while (true) {
-
 				try {
 					byte b = in.readByte();
 					if (b == 1) {
@@ -130,12 +129,10 @@ public class Server {
 						currCategory = in.readObject().toString().toLowerCase();
 						rand = (int) Math.random() * categories.getCategories().get(currCategory).size();
 						word = categories.getCategories().get(currCategory).remove(rand);
-						// categories.getCategories().get(currCategory).remove(rand);
 						letterCount = word.length();
 						guessCount = 6;
 						wordGuessCount = 3;
 						System.out.println(word);
-
 					} else {
 
 					}
