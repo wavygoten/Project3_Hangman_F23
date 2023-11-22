@@ -102,7 +102,9 @@ public class Server {
 									positions.add(i);
 								}
 							}
-							guessCount--;
+							if (!letterInWord) {
+								guessCount--;
+							}
 						} else {
 							if (guess.toLowerCase().equals(word.toLowerCase())) {
 								won = true;
