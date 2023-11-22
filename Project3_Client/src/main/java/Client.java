@@ -18,18 +18,20 @@ public class Client extends Thread {
 
 	private Consumer<Serializable> callback;
 	private int port;
-	String category;
+	String category, userC, userG;
 
 	Client(Consumer<Serializable> call, int p, String c) {
 		port = p;
 		callback = call;
 		category = c;
-		message = "";
+		message = userC = userG = "";
+
 	}
 
 	Client(Consumer<Serializable> call, String c) {
 		callback = call;
 		category = c;
+		message = userC = userG = "";
 	}
 
 	public void run() {
@@ -64,9 +66,9 @@ public class Client extends Thread {
 					}
 					callback.accept(msg);
 				} else if (b == 2) {
-					// we ran out of words
-					message = in.readObject().toString();
-					callback.accept(message);
+
+					// message = in.readObject().toString();
+					// callback.accept(message);
 				} else {
 
 				}
@@ -86,6 +88,7 @@ public class Client extends Thread {
 	 */
 	public void sendGuess(String data) {
 		try {
+			userG = data;
 			out.writeByte(1); // Identifier for String
 			out.writeObject(data);
 		} catch (IOException e) {
@@ -94,20 +97,26 @@ public class Client extends Thread {
 		}
 	}
 
+	/**
+	 * This sends the category to the server
+	 * 
+	 * @param data
+	 */
 	public void sendCategory(String data) {
 		try {
+			userC = data;
 			out.writeByte(2); // Identifier for int
 			out.writeObject(data);
-			// if (category == 0) {
-			// out.writeObject("thanksgiving");
-			// } else if (category == 1) {
-			// out.writeObject("food");
-			// } else {
-			// out.writeObject("US states");
-			// }
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
+	public void setUserC(String userC) {
+		this.userC = userC;
+	}
+
+	public void setUserG(String userG) {
+		this.userG = userG;
+	}
 }

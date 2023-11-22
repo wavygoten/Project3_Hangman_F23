@@ -78,7 +78,8 @@ public class GuiClient extends Application {
 		/* End of Category Scene */
 
 		/* Add css classes */
-
+		// loginBtn.getStyleClass().add("loginbtn");
+		
 		/* End of css classes */
 	}
 
@@ -92,29 +93,8 @@ public class GuiClient extends Application {
 		// TODO Auto-generated method stub
 		primaryStage.setTitle("Client Login Page");
 
-		// this.clientChoice = new Button("Client");
-		// this.clientChoice.setStyle("-fx-pref-width: 300px");
-		// this.clientChoice.setStyle("-fx-pref-height: 300px");
-
-		// this.clientChoice.setOnAction(e -> {
-		// primaryStage.setScene(createClientGui());
-		// primaryStage.setTitle("This is a client");
-		// clientConnection = new Client(data -> {
-		// Platform.runLater(() -> {
-		// listItems2.getItems().add(data.toString());
-		// });
-		// });
-
-		// clientConnection.start();
-		// });
-
 		startScene = loginScene();
 		startScene.getStylesheets().add("style.css");
-
-		// b1.setOnAction(e -> {
-		// clientConnection.send(c1.getText());
-		// c1.clear();
-		// });
 
 		primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
 			@Override
